@@ -20,7 +20,7 @@ class App{
 
             $route = new Route;
             $route = $route->GetRoutes($urlR,$_SERVER['REQUEST_METHOD']);
-            if ($route = 'The route does not exist') echo 'The route is undefined';
+            if ($route == 'The route does not exist') echo 'The route is undefined';
             $route=explode('@',$route);
 
 
