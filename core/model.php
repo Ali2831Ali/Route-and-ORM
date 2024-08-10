@@ -7,7 +7,11 @@ class Model
 
     public string $ModelName = '';
 
-    private $object = [];
+    public static $sql = '';
+    public $object = [];
+    public $VforWheres = [];
+
+
     function __construct($ModelName='')
     {
         try {
@@ -19,13 +23,73 @@ class Model
         }
         if ($ModelName!=''){
             $this->ModelName = $ModelName;
-            $this->object = $this->doSelect('select * from tbl_'.$this->ModelName);
-            var_dump($this->object);
+            self::$sql='select * from tbl_'.$this->ModelName;
+            $this->object = $this->where();
+        }else{
+            $ModelName='index';
         }
 
     }
 
-    function doSelect($sql, $values = [], $fetch = '', $fetchstyle = PDO::FETCH_ASSOC)
+
+    function Where($where = '' , $values = [])
+    {
+        if ($where!='') self::$sql = "select * from tbl_".$this->ModelName." where ".$where."=?";
+        $result = $this->doSelect(self::$sql,$values);
+        if ($result){
+            foreach ($values as $value){
+                $this->VforWheres[] = $value;
+            }
+            return $result;
+        }else{
+            return 'natije ii peida nashod';
+        }
+    }
+
+    function AndWhere($where = '' , $values=[]){
+        if ($this->WhereChecker()){
+            if ($where!='') {
+                $values = array_merge($this->VforWheres, $values);
+                self::$sql = self::$sql . " and " . $where . "=?";
+                $result = $this->doSelect(self::$sql, $values);
+                if ($result) {
+                    $this->VforWheres = array_unique($values);
+                    return $result;
+                }else return 'natije ii peida nashod';
+            }else return 'shart khod ra vared konid';
+        }else return 'aval where ro vared konid bad andwhere bezanid';
+    }
+    
+    function OrWhere($where = '' , $values=[]){
+        if ($this->WhereChecker()) {
+            if ($where!='') {
+                $values = array_merge($this->VforWheres, $values);
+                self::$sql = self::$sql . " or " . $where . "=?";
+                $result = $this->doSelect(self::$sql, $values);
+                if ($result) {
+                    $this->VforWheres = array_unique($values);
+                    return $result;
+                } else return 'natije ii peida nashod';
+            }else return 'shart khod ra vared konid';
+        }else return 'aval where ro vared konid bad andwhere bezanid';
+    }
+
+    function Endwhere(){
+        foreach ($this->VforWheres as $key => $row){
+            unset($this->VforWheres[$key]);
+        }
+        self::$sql = '';
+    }
+
+    function WhereChecker(){
+        if (count($this->VforWheres)!=0){
+            return TRUE;
+        }else{
+            return false;
+        }
+    }
+
+     function doSelect($sql, $values = [], $fetch = '', $fetchstyle = PDO::FETCH_ASSOC)
     {
         $stmt = self::$conn->prepare($sql);
         foreach ($values as $key => $value) {
@@ -37,25 +101,9 @@ class Model
         } else {
             $result = $stmt->fetch($fetchstyle);
         }
-        return $result;
+        if (count($result)==0) return false;
+        else return $result;
     }
-
-    function where($where = '' , $values = [], $fetch = '', $fetchstyle = PDO::FETCH_ASSOC)
-    {
-        $sql = "select * from tbl_".$this->ModelName." where ".$where."=?";
-        $stmt = self::$conn->prepare($sql);
-        foreach ($values as $key => $value) {
-            $stmt->bindValue($key + 1, $value);
-        }
-        $stmt->execute();
-        if ($fetch == '') {
-            $result = $stmt->fetchAll($fetchstyle);
-        } else {
-            $result = $stmt->fetch($fetchstyle);
-        }
-        return $result;
-    }
-
 
 
 
