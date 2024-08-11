@@ -15,6 +15,8 @@ class user extends Model
         var_dump($this->where('id',[49]));
         var_dump($this->Andwhere('name',['آرمین']));
         var_dump($this->OrWhere('email',['www.arminarm11ita@gmail.com']));
+        $this->Endwhere();
+        //var_dump($this->InsertInto(['name','email'],['reza','hasan']));
     }
 
 

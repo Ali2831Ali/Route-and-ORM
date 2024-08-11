@@ -10,7 +10,7 @@ class Route{
                 return match($url){
                     //define get routes
                     'index'=>'user@index',
-                    'index/index'=>'index@index',
+                    'avatar/index'=>'avatar@index',
                     'user/ali'=>'user@ali',
                     default => 'The route does not exist'
                 };

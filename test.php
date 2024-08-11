@@ -10,13 +10,29 @@
     <body>
 
     <?php
-    $foo = 'ali';
-    $ali = 'salam';
+
+    class ali{
+        public static $x = '';
+
+
+
+        public function ali(){
+            self::$x.= '';
+        }
+
+        public function andwhere()
+        {
+            self::$x .= '';
+        }
 
 
 
 
-
+    }
+    $obj = new ali;
+    $obj->ali();
+    $obj->andwhere();
+    echo $obj::$x;
 
     ?>
 
