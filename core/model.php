@@ -32,16 +32,15 @@ class Model
     }
 
 
-    function Where($where = '', $values = [])
+    function Where($where = '', $value = '')
     {
         if ($this->SqlChecker()) {
             if ($where != '') {
                 self::$sql = "select * from tbl_" . $this->ModelName . " where " . $where . "=?";
-                $result = $this->doSelect(self::$sql, $values);
+                $value = array($value);
+                $result = $this->doSelect(self::$sql, $value);
                 if ($result) {
-                    foreach ($values as $value) {
-                        $this->VforWheres[] = $value;
-                    }
+                    $this->VforWheres = $value;
                     return $result;
                 } else {
                     return 'natije ii peida nashod';
@@ -50,11 +49,12 @@ class Model
         } else return 'sql digari dar hal ejrast';
     }
 
-    function AndWhere($where = '', $values = [])
+    function AndWhere($where = '', $value = '')
     {
         if ($this->WhereChecker()) {
             if ($where != '') {
-                $values = array_merge($this->VforWheres, $values);
+                $value = array($value);
+                $values = array_merge($this->VforWheres, $value);
                 self::$sql = self::$sql . " and " . $where . "=?";
                 $result = $this->doSelect(self::$sql, $values);
                 if ($result) {
@@ -65,11 +65,11 @@ class Model
         } else return 'aval where ro vared konid bad andwhere bezanid';
     }
 
-    function OrWhere($where = '', $values = [])
+    function OrWhere($where = '', $value = '')
     {
         if ($this->WhereChecker()) {
             if ($where != '') {
-                $values = array_merge($this->VforWheres, $values);
+                $values = array_merge($this->VforWheres, [$value]);
                 self::$sql = self::$sql . " or " . $where . "=?";
                 $result = $this->doSelect(self::$sql, $values);
                 if ($result) {
@@ -102,8 +102,35 @@ class Model
 
             if (count(explode(',',$ValuesStr))==count(explode(',',$FieldStr))){
                 self::$sql = 'insert into tbl_'.$this->ModelName.' ('.$FieldStr.') VALUES ('.$ValuesStr.')';
-                $result = $this->doQuary(self::$sql,$values);
+                $this->doQuary(self::$sql,$values);
+                self::$sql='';
             }else return 'tedad value ba filed yeki nis';
+        } else return 'sql digari dar hal ejrast';
+    }
+
+
+    function Update($fields = [],$where = '', $values = [])
+    {
+        //akarin value bara shart where
+        if ($this->SqlChecker()) {
+            $SetValues = '';
+            for($i=0;$i<count($fields)-1;$i++){
+                $SetValues = $SetValues . $fields[$i].' =? , ';
+            }
+            $SetValues = $SetValues . $fields[count($fields)-1].' =?';
+
+            if (count($values)-1==count($fields)){
+                self::$sql = 'update tbl_'.$this->ModelName.' set '.$SetValues.' where '.$where.'=?';
+                $this->doQuary(self::$sql,$values);
+                self::$sql = '';
+            }else return 'tedad value ba filed yeki nis';
+        } else return 'sql digari dar hal ejrast';
+    }
+
+    function Delete($where = '',$value = ''){
+        if ($this->SqlChecker()) {
+            self::$sql = 'DELETE FROM tbl_'.$this->ModelName.' WHERE '.$where.'=?';
+            $this->doQuary(self::$sql,$value);
         } else return 'sql digari dar hal ejrast';
     }
 
@@ -131,8 +158,12 @@ class Model
     {
         $stmt = self::$conn->prepare($sql);
 
-        foreach ($values as $key => $value) {
-            $stmt->bindValue($key + 1, $value);
+        if (gettype($values)==array()){
+            foreach ($values as $key => $value) {
+                $stmt->bindValue($key + 1, $value);
+            }
+        }else{
+            $stmt->bindValue(1, $values);
         }
         $stmt->execute();
 
