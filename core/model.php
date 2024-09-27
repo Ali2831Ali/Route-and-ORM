@@ -122,7 +122,7 @@ class Model
             if (count($values)-1==count($fields)){
                 self::$sql = 'update tbl_'.$this->ModelName.' set '.$SetValues.' where '.$where.'=?';
                 $this->doQuary(self::$sql,$values);
-                self::$sql = '';
+                self::$sql='';
             }else return 'tedad value ba filed yeki nis';
         } else return 'sql digari dar hal ejrast';
     }
@@ -131,6 +131,7 @@ class Model
         if ($this->SqlChecker()) {
             self::$sql = 'DELETE FROM tbl_'.$this->ModelName.' WHERE '.$where.'=?';
             $this->doQuary(self::$sql,$value);
+            self::$sql='';
         } else return 'sql digari dar hal ejrast';
     }
 
@@ -158,7 +159,7 @@ class Model
     {
         $stmt = self::$conn->prepare($sql);
 
-        if (gettype($values)==array()){
+        if (gettype($values)=="array"){
             foreach ($values as $key => $value) {
                 $stmt->bindValue($key + 1, $value);
             }

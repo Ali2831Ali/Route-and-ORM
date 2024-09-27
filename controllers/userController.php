@@ -5,8 +5,12 @@ class userController extends Controller {
         parent::__construct();
     }
 
-    function ali(){
-        echo $this->model->user();
+    function edit($attr){
+        echo $this->model->edit($attr);
+    }
+
+    function delete($attr){
+        echo $this->model->deleteuser($attr);
     }
 
 

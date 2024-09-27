@@ -3,17 +3,22 @@
 class Route{
 
 
-    function GetRoutes($url,$method)
+
+    function GetRoutes($url,$method,$attr)
     {
         switch ($method){
             case 'GET':
-                return match($url){
+
                     //define get routes
-                    'index'=>'user@index',
-                    'avatar/index'=>'avatar@index',
-                    'user/ali'=>'user@ali',
-                    default => 'The route does not exist'
-                };
+                    return match($url) {
+                        'index' => 'user@index',
+                        'avatar/index' => 'avatar@index',
+                        'user/edit/' . $attr => 'user@edit',
+                        'user/delete/' . $attr => 'user@delete',
+                        default => 'The route does not exist'
+                    };
+
+
 
             case 'POST':
                 return match($url){
