@@ -3,9 +3,10 @@
 class avatar extends Model
 {
 
-    function __construct($modelname)
+    public $dbname = 'avatar';
+    function __construct()
     {
-        parent::__construct($modelname);
+        parent::__construct($this->dbname);
     }
 
     function addavatar(){

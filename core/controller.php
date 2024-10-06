@@ -2,7 +2,7 @@
 
 class Controller{
 
-
+    public $model ;
 
     function __construct(){
 
@@ -24,7 +24,7 @@ class Controller{
     function model($modelname)
     {
         require ('models/'.$modelname.'.php');
-        $this->model=new $modelname($modelname);
+        $this->model=new $modelname;
     }
 
 }

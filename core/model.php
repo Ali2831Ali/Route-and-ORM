@@ -8,9 +8,10 @@ class Model
     public string $ModelName = '';
 
     public static $sql = '';
-    public $object = [];
-    public $VforWheres = [];
+    public $VforWhere = [];
+    public $VforSql = [];
 
+    public $error = [];
 
     function __construct($ModelName = '')
     {
@@ -23,8 +24,6 @@ class Model
         }
         if ($ModelName != '') {
             $this->ModelName = $ModelName;
-            //self::$sql = 'select * from tbl_' . $this->ModelName;
-            //$this->object = $this->where();
         } else {
             $ModelName = 'index';
         }
@@ -34,124 +33,105 @@ class Model
 
     function Where($where = '', $value = '')
     {
-        if ($this->SqlChecker()) {
-            if ($where != '') {
-                self::$sql = "select * from tbl_" . $this->ModelName . " where " . $where . "=?";
-                $value = array($value);
-                $result = $this->doSelect(self::$sql, $value);
-                if ($result) {
-                    $this->VforWheres = $value;
-                    return $result;
-                } else {
-                    return 'natije ii peida nashod';
-                }
-            } else return 'shart khod ra vared konid';
-        } else return 'sql digari dar hal ejrast';
+        if ($this->SqlChecker()) $this->error[] = "sql digari dar hal ejrast";
+        if ($where == '') $this->error[] = 'shart where khod ra vared konid';
+        if ($value == '') $this->error[] = 'value where ro vared konid';
+        self::$sql = "select * from tbl_" . $this->ModelName . " where " . $where . "=?";
+        $value = array($value);
+        $this->VforWhere = $value;
     }
 
     function AndWhere($where = '', $value = '')
     {
-        if ($this->WhereChecker()) {
-            if ($where != '') {
-                $value = array($value);
-                $values = array_merge($this->VforWheres, $value);
-                self::$sql = self::$sql . " and " . $where . "=?";
-                $result = $this->doSelect(self::$sql, $values);
-                if ($result) {
-                    $this->VforWheres = array_unique($values);
-                    return $result;
-                } else return 'natije ii peida nashod';
-            } else return 'shart khod ra vared konid';
-        } else return 'aval where ro vared konid bad andwhere bezanid';
+        if (!$this->WhereChecker()) $this->error[] = 'aval where ro vared konid bad andwhere bezanid';
+        if ($where == '') $this->error[] = 'shart khod ra vared konid';
+        if ($value == '') $this->error[] = 'value where ro vared konid';
+        $values = array_merge($this->VforWhere, [$value]);
+        self::$sql = self::$sql . " and " . $where . "=?";
+        $this->VforWhere = $values;
+
     }
 
     function OrWhere($where = '', $value = '')
     {
-        if ($this->WhereChecker()) {
-            if ($where != '') {
-                $values = array_merge($this->VforWheres, [$value]);
-                self::$sql = self::$sql . " or " . $where . "=?";
-                $result = $this->doSelect(self::$sql, $values);
-                if ($result) {
-                    $this->VforWheres = array_unique($values);
-                    return $result;
-                } else return 'natije ii peida nashod';
-            } else return 'shart khod ra vared konid';
-        } else return 'aval where ro vared konid bad andwhere bezanid';
+        if (!$this->WhereChecker()) $this->error[] = 'aval where ro vared konid bad andwhere bezanid';
+        if ($where == '') $this->error[] = 'shart khod ra vared konid';
+        if ($value == '') $this->error[] = 'value where ro vared konid';
+        $values = array_merge($this->VforWhere, [$value]);
+        self::$sql = self::$sql . " or " . $where . "=?";
+        $this->VforWhere = $values;
     }
-
-    function Endwhere()
-    {
-        foreach ($this->VforWheres as $key => $row) {
-            unset($this->VforWheres[$key]);
-        }
-        self::$sql = '';
-    }
-
 
     function InsertInto($fields = [], $values = [])
     {
-        if ($this->SqlChecker()) {
-            $FieldStr = implode(",", $fields);
+        if ($this->SqlChecker()) $this->error[] = 'sql digari dar hal ejrast';
+        $FieldStr = implode(",", $fields);
+        $ValuesStr = '';
+        for ($i = 0; $i < count($values) - 1; $i++) {
+            $ValuesStr = $ValuesStr . "?,";
+        }
+        $ValuesStr = $ValuesStr . "?";
 
-            $ValuesStr = '';
-            for ($i=0;$i<count($values)-1;$i++){
-                $ValuesStr = $ValuesStr."?,";
-            }
-            $ValuesStr = $ValuesStr . "?";
-
-            if (count(explode(',',$ValuesStr))==count(explode(',',$FieldStr))){
-                self::$sql = 'insert into tbl_'.$this->ModelName.' ('.$FieldStr.') VALUES ('.$ValuesStr.')';
-                $this->doQuary(self::$sql,$values);
-                self::$sql='';
-            }else return 'tedad value ba filed yeki nis';
-        } else return 'sql digari dar hal ejrast';
+        if (count(explode(',', $ValuesStr)) != count(explode(',', $FieldStr))) $this->error[] = 'tedad value ba filed yeki nis';
+        self::$sql = 'insert into tbl_' . $this->ModelName . ' (' . $FieldStr . ') VALUES (' . $ValuesStr . ')';
+        $this->VforSql = $values;
     }
 
 
-    function Update($fields = [],$where = '', $values = [])
+    function Update($fields = [], $where = '', $values = [])
     {
         //akarin value bara shart where
-        if ($this->SqlChecker()) {
-            $SetValues = '';
-            for($i=0;$i<count($fields)-1;$i++){
-                $SetValues = $SetValues . $fields[$i].' =? , ';
-            }
-            $SetValues = $SetValues . $fields[count($fields)-1].' =?';
+        if ($this->SqlChecker()) $this->error[] = 'sql digari dar hal ejrast';
+        $SetValues = '';
+        for ($i = 0; $i < count($fields) - 1; $i++) {
+            $SetValues = $SetValues . $fields[$i] . ' =? , ';
+        }
+        $SetValues = $SetValues . $fields[count($fields) - 1] . ' =?';
 
-            if (count($values)-1==count($fields)){
-                self::$sql = 'update tbl_'.$this->ModelName.' set '.$SetValues.' where '.$where.'=?';
-                $this->doQuary(self::$sql,$values);
-                self::$sql='';
-            }else return 'tedad value ba filed yeki nis';
-        } else return 'sql digari dar hal ejrast';
+        if (count($values) - 1 != count($fields)) $this->error[] = 'tedad value ba filed yeki nis';
+        self::$sql = 'update tbl_' . $this->ModelName . ' set ' . $SetValues . ' where ' . $where . '=?';
+        $this->VforSql = $values;
     }
 
-    function Delete($where = '',$value = ''){
-        if ($this->SqlChecker()) {
-            self::$sql = 'DELETE FROM tbl_'.$this->ModelName.' WHERE '.$where.'=?';
-            $this->doQuary(self::$sql,$value);
-            self::$sql='';
-        } else return 'sql digari dar hal ejrast';
+    function Delete($where = '', $value = '')
+    {
+        if ($this->SqlChecker()) $this->error[] = 'sql digari dar hal ejrast';
+        self::$sql = 'DELETE FROM tbl_' . $this->ModelName . ' WHERE ' . $where . '=?';
     }
 
+
+    function SqlChecker()
+    {
+        if (self::$sql != '') {
+            return TRUE;
+        }
+    }
 
     // function haye karbordi
     function WhereChecker()
     {
-        if (count($this->VforWheres) != 0) {
+        if (count($this->VforWhere) != 0) {
             return TRUE;
         } else {
             return false;
         }
     }
 
-    function SqlChecker()
-    {
-        if (self::$sql == '') {
-            return TRUE;
-        } else {
-            return false;
+    function finishQuery(){
+        if (count($this->error) != 0){
+            return $this->error;
+        }elseif ($this->WhereChecker()){
+            $result = $this->doSelect(self::$sql, $this->VforWhere);
+            if (!$result) return 'natije ii peida nashod';
+            foreach ($this->VforWhere as $key => $row) {
+                unset($this->VforWhere[$key]);
+            }
+            self::$sql = '';
+            return $result;
+        }elseif ($this->SqlChecker()){
+            $this->doQuary(self::$sql,$this->VforSql);
+            self::$sql='';
+            return 'sql ba movafaghiat anjam shod';
         }
     }
 
@@ -159,14 +139,20 @@ class Model
     {
         $stmt = self::$conn->prepare($sql);
 
-        if (gettype($values)=="array"){
+        if (gettype($values) == "array") {
             foreach ($values as $key => $value) {
                 $stmt->bindValue($key + 1, $value);
             }
-        }else{
+        } else {
             $stmt->bindValue(1, $values);
         }
-        $stmt->execute();
+
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die("Connection failed: " . $e->getMessage());
+        }
+
 
     }
 
@@ -177,14 +163,20 @@ class Model
         foreach ($values as $key => $value) {
             $stmt->bindValue($key + 1, $value);
         }
-        $stmt->execute();
+
+        try {
+            $stmt->execute();
+        } catch (PDOException $e) {
+            die("Connection failed: " . $e->getMessage());
+        }
+
         if ($fetch == '') {
             $result = $stmt->fetchAll($fetchstyle);
         } else {
             $result = $stmt->fetch($fetchstyle);
         }
-        if (count($result) == 0) return false;
-        else return $result;
+
+        return $result;
     }
 
 

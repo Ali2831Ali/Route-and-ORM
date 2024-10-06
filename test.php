@@ -10,30 +10,20 @@
     <body>
 
     <?php
-
-    class ali{
-        public static $x = '';
-
-
-
-        public function ali(){
-            self::$x.= '';
-        }
-
-        public function andwhere()
-        {
-            self::$x .= '';
-        }
-
-
-
-
+    $hostname = 'localhost';
+    //data base config
+    $DBname = 'quees_mvc';
+    $DBusername = 'root';
+    $DBpassword = '';
+    try {
+        $attr = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8');
+        $conn = new PDO('mysql:host=' . $hostname . ';dbname=' . $DBname, $DBusername, $DBpassword, $attr);
+        $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e) {
+        die("Connection failed: " . $e->getMessage());
     }
-    $obj = new ali;
-    $obj->ali();
-    $obj->andwhere();
-    echo $obj::$x;
 
+    var_dump($conn);
     ?>
 
     <!--<script src="js/script.js"></script>-->
